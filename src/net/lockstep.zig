@@ -60,4 +60,8 @@ pub const Lockstep = struct {
         self.frame = 0;
         self.command_buffer.clearRetainingCapacity();
     }
+
+    pub fn deinit(self: *Self) void {
+        self.command_buffer.clearAndFree(self.allocator);
+    }
 };

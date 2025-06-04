@@ -13,7 +13,7 @@ pub const Simulation = struct {
         return .{
             .allocator = allocator,
             .state = state,
-            .command_log = undefined,
+            .command_log = .{},
         };
     }
 
