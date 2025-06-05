@@ -80,3 +80,13 @@ pub const GameState = struct {
         self.frame += 1;
     }
 };
+
+test "add unit" {
+    var gs: GameState = .init();
+    const entityId = gs.add_unit(Unit.create_unit(0, .zero(), .TestWorker));
+
+    try std.testing.expectEqual(2, gs.next_unit_id);
+
+    const entity = gs.get_unit(entityId).?;
+    try std.testing.expectEqual(1, entity.id);
+}

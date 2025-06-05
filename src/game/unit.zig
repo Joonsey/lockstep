@@ -1,18 +1,22 @@
 const shared = @import("shared.zig");
 
 const GameState = @import("state.zig");
+const UnitData = @import("unit_type.zig").UnitData;
+const UnitType = @import("unit_type.zig").UnitType;
 
 const EntityId = shared.EntityId;
 const Position = shared.Position;
 
 pub const Unit = struct {
-    id: EntityId,
+    // invalidated before given to ECS
+    id: EntityId = 0,
     owner_id: u8,
     pos: Position,
     health: i32,
     max_health: i32,
-    speed: f32, // Movement speed units per frame
-    intent: Intent,
+    speed: f32,
+    intent: Intent = .None,
+    kind: UnitType,
 
     const Self = @This();
     pub fn update(self: *Self, state: *GameState) void {
@@ -32,7 +36,19 @@ pub const Unit = struct {
 
     pub const Intent = union(enum) {
         None,
-        Move: struct { dx: f32, dy: f32 },
+        Move: Position,
         Attack: u32, // target unit id
     };
+
+    pub fn create_unit(owner_id: u8, pos: Position, unit_type: UnitType) Self {
+        const data = UnitData.get(unit_type);
+        return .{
+            .health = data.health,
+            .speed = data.speed,
+            .pos = pos,
+            .owner_id = owner_id,
+            .max_health = data.health,
+            .kind = unit_type,
+        };
+    }
 };

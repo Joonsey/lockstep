@@ -38,7 +38,7 @@ pub const Lockstep = struct {
     pub fn submit_command(self: *Lockstep, player_id: u8, frame: u32, command: Command) void {
         const entry = self.command_buffer.getOrPut(self.allocator, frame) catch return;
         if (!entry.found_existing) {
-            entry.value_ptr.* = [_]?Command{.NONE} ** MaxPlayers;
+            entry.value_ptr.* = [_]?Command{.None} ** MaxPlayers;
         }
         entry.value_ptr.*[player_id] = command;
     }
@@ -65,3 +65,14 @@ pub const Lockstep = struct {
         self.command_buffer.clearAndFree(self.allocator);
     }
 };
+
+test "frame ready" {
+    const allocator = std.testing.allocator;
+    var ls: Lockstep = .init(allocator, 2);
+    defer ls.deinit();
+    try std.testing.expect(!ls.frame_ready(0));
+
+    ls.submit_command(0, 0, .None);
+    ls.submit_command(1, 0, .None);
+    try std.testing.expect(ls.frame_ready(0));
+}

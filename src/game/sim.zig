@@ -18,6 +18,7 @@ pub const Simulation = struct {
     }
 
     pub fn step(self: *Self, frame_cmds: []const Command) void {
+        std.log.info("{any}", .{frame_cmds});
         self.command_log.append(self.allocator, frame_cmds) catch unreachable;
 
         for (frame_cmds) |cmd| {
