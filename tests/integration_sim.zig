@@ -104,11 +104,11 @@ test "builder build" {
     });
 
     var unit = sim.state.get_unit(unit_id).?;
-    try testing.expectEqual(.WalkingToSite, unit.intent.Build.stage);
+    try testing.expectEqual(.WalkingToSite, unit.get_intent().Build.stage);
     for (0..19) |_| sim.step(&[_]game.Command{});
     unit = sim.state.get_unit(unit_id).?;
 
-    const structure_id = unit.intent.Build.stage.Constructing;
+    const structure_id = unit.get_intent().Build.stage.Constructing;
     var structure = sim.state.get_structure(structure_id).?;
     try testing.expect(structure.under_construction);
 
@@ -118,7 +118,58 @@ test "builder build" {
     try testing.expect(!structure.under_construction);
 
     unit = sim.state.get_unit(unit_id).?;
-    try testing.expectEqual(.None, unit.intent);
+    try testing.expectEqual(.None, unit.get_intent());
     try testing.expectEqual(20, unit.pos.x);
     try testing.expectEqual(0, unit.pos.y);
+}
+
+test "unit intent queue append" {
+    var gamestate: GameState = .init();
+    var sim = Simulation.init(allocator, &gamestate);
+    defer sim.deinit();
+
+    const unit_id = sim.state.add_unit(game.Unit.create(0, .{ .x = 0, .y = 0 }, .TestWorker));
+    sim.step(&[_]game.Command{
+        .{ .MoveTo = .{ .pos = .{ .x = 20, .y = 0 }, .unit_id = unit_id, .mode = .Append } },
+    });
+
+    sim.step(&[_]game.Command{
+        .{ .MoveTo = .{ .pos = .{ .x = 20, .y = 20 }, .unit_id = unit_id, .mode = .Append } },
+    });
+
+    var unit = sim.state.get_unit(unit_id).?;
+    try testing.expectEqual(2, unit.intent_count);
+    for (0..50) |_| sim.step(&[_]game.Command{});
+    unit = sim.state.get_unit(unit_id).?;
+
+    try testing.expectEqual(20, unit.pos.x);
+    try testing.expectEqual(20, unit.pos.y);
+}
+
+test "unit intent queue replace" {
+    var gamestate: GameState = .init();
+    var sim = Simulation.init(allocator, &gamestate);
+    defer sim.deinit();
+
+    const unit_id = sim.state.add_unit(game.Unit.create(0, .{ .x = 0, .y = 0 }, .TestWorker));
+    sim.step(&[_]game.Command{
+        .{ .MoveTo = .{ .pos = .{ .x = 20, .y = 0 }, .unit_id = unit_id, .mode = .Append } },
+    });
+
+    sim.step(&[_]game.Command{
+        .{ .MoveTo = .{ .pos = .{ .x = 0, .y = 10 }, .unit_id = unit_id, .mode = .Replace } },
+    });
+
+    var unit = sim.state.get_unit(unit_id).?;
+    // only one intent in queue
+    try testing.expectEqual(1, unit.intent_count);
+
+    // only stepping 9 frames, this would imply we would not have the time to make it
+    // from 0,0 to 20,0 first, and then to 0,10
+    // so we can assert that it's path is aborted in favour of traveling to 0,10 directly
+    for (0..9) |_| sim.step(&[_]game.Command{});
+    unit = sim.state.get_unit(unit_id).?;
+
+    try testing.expectEqual(0, unit.pos.x);
+    try testing.expectEqual(10, unit.pos.y);
 }

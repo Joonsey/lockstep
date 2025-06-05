@@ -12,39 +12,53 @@ pub const Command = union(enum) {
     MoveTo: struct {
         unit_id: EntityId,
         pos: Position,
+        mode: Mode = .Replace,
     },
     Attack: struct {
         unit_id: EntityId,
         target_id: EntityId,
+        mode: Mode = .Replace,
     },
     Build: struct {
         builder_id: EntityId,
         structure_type: StructureType,
         pos: Position,
+        mode: Mode = .Replace,
     },
     SetRallyPoint: struct {
         building_id: EntityId,
         target_pos: Position,
+        mode: Mode = .Replace,
     },
     CancelBuild: struct {
         queue_owner_id: EntityId,
     },
+
+    // Queue mode
+    pub const Mode = enum {
+        Replace,
+        Append,
+    };
 
     pub fn apply(self: Command, state: *GameState) void {
         switch (self) {
             .None => {}, // no-op
             .MoveTo => |cmd| {
                 const unit = state.get_unit_mut(cmd.unit_id) orelse return;
-                unit.intent = .{ .Move = cmd.pos };
+                if (cmd.mode == .Replace) unit.reset_intent();
+                unit.push_intent(.{ .Move = cmd.pos });
             },
             .Attack => |cmd| {
                 const unit = state.get_unit_mut(cmd.unit_id) orelse return;
+                // if (cmd.mode == .Replace) unit.reset_intent();
+                // unit.push_intent(.{ .Move = cmd.pos });
                 _ = unit;
                 // unit.intent = .{ .attack_target = cmd.target_id };
             },
             .Build => |cmd| {
                 const builder = state.get_unit_mut(cmd.builder_id) orelse return;
-                builder.intent = .{ .Build = .{ .pos = cmd.pos, .kind = cmd.structure_type } };
+                if (cmd.mode == .Replace) builder.reset_intent();
+                builder.push_intent(.{ .Build = .{ .pos = cmd.pos, .kind = cmd.structure_type } });
             },
             .SetRallyPoint => |cmd| {
                 const b = state.get_unit_mut(cmd.building_id) orelse return;
