@@ -1,21 +1,17 @@
 const std = @import("std");
 const GameState = @import("state.zig").GameState;
+const StructureType = @import("structure.zig").StructureType;
 const shared = @import("shared.zig");
 
 const EntityId = shared.EntityId;
 const Frame = shared.Frame;
 const Position = shared.Position;
 
-pub const StructureType = enum {
-    thing,
-};
-
 pub const Command = union(enum) {
     None: void,
-    Move: struct {
+    MoveTo: struct {
         unit_id: EntityId,
-        dx: i8,
-        dy: i8,
+        pos: Position,
     },
     Attack: struct {
         unit_id: EntityId,
@@ -37,10 +33,9 @@ pub const Command = union(enum) {
     pub fn apply(self: Command, state: *GameState) void {
         switch (self) {
             .None => {}, // no-op
-            .Move => |cmd| {
+            .MoveTo => |cmd| {
                 const unit = state.get_unit_mut(cmd.unit_id) orelse return;
-                _ = unit;
-                // unit.intent = .{ .move_dir = .{ cmd.dx, cmd.dy } };
+                unit.intent = .{ .Move = cmd.pos };
             },
             .Attack => |cmd| {
                 const unit = state.get_unit_mut(cmd.unit_id) orelse return;
@@ -49,8 +44,7 @@ pub const Command = union(enum) {
             },
             .Build => |cmd| {
                 const builder = state.get_unit_mut(cmd.builder_id) orelse return;
-                _ = builder;
-                // state.begin_construction(builder, cmd.structure_type, cmd.pos);
+                builder.intent = .{ .Build = .{ .pos = cmd.pos, .kind = cmd.structure_type } };
             },
             .SetRallyPoint => |cmd| {
                 const b = state.get_unit_mut(cmd.building_id) orelse return;

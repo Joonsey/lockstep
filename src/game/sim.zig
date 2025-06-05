@@ -18,7 +18,6 @@ pub const Simulation = struct {
     }
 
     pub fn step(self: *Self, frame_cmds: []const Command) void {
-        std.log.info("{any}", .{frame_cmds});
         self.command_log.append(self.allocator, frame_cmds) catch unreachable;
 
         for (frame_cmds) |cmd| {
@@ -31,7 +30,13 @@ pub const Simulation = struct {
     }
 
     fn update(self: Self) void {
-        _ = self;
+        for (self.state.get_units()) |*unit| {
+            unit.update(self.state);
+        }
+
+        for (self.state.get_structures()) |*structure| {
+            structure.update(self.state);
+        }
     }
 
     pub fn reset(self: *Simulation) void {
