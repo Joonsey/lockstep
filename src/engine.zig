@@ -3,6 +3,7 @@ const std = @import("std");
 const game = @import("game.zig");
 const net = @import("net.zig");
 const render = @import("render.zig");
+const map = @import("map.zig");
 
 pub const Engine = struct {
     sim: game.Simulation,

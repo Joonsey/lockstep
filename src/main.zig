@@ -25,5 +25,6 @@ pub fn main() void {
 }
 
 test {
+    _ = @import("map.zig");
     @import("std").testing.refAllDecls(@This());
 }

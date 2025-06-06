@@ -94,7 +94,7 @@ fn find_path(
     };
     try open_set.add(start_node);
 
-    const directions: [4]Vec2 = .{
+    const directions: [8]Vec2 = .{
         .{ .x = 1, .y = 0 },
         .{ .x = -1, .y = 0 },
         .{ .x = 0, .y = 1 },

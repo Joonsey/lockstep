@@ -106,3 +106,13 @@ test "add unit" {
     const entity = gs.get_unit(entityId).?;
     try std.testing.expectEqual(1, entity.id);
 }
+
+test "add structure" {
+    var gs: GameState = .init();
+    const entityId = gs.add_structure(Structure.create(0, .zero(), .thing));
+
+    try std.testing.expectEqual(2, gs.next_structure_id);
+
+    const entity = gs.get_structure(entityId).?;
+    try std.testing.expectEqual(1, entity.id);
+}

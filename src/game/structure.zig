@@ -33,7 +33,6 @@ pub const Structure = struct {
     rally_pos: ?Position = null,
 
     const Self = @This();
-
     pub fn update(self: *Self, gamestate: *GameState) void {
         _ = gamestate;
         switch (self.build_state) {
