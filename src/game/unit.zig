@@ -65,7 +65,7 @@ pub const Unit = struct {
                         }
                     },
                     .Constructing => |entity_id| {
-                        if (!state.get_structure(entity_id).?.under_construction) {
+                        if (state.get_structure(entity_id).?.build_state == .Active) {
                             self.complete_intent();
                         }
                     },

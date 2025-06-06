@@ -110,12 +110,12 @@ test "builder build" {
 
     const structure_id = unit.get_intent().Build.stage.Constructing;
     var structure = sim.state.get_structure(structure_id).?;
-    try testing.expect(structure.under_construction);
+    try testing.expect(structure.build_state != .Active);
 
     for (0..100) |_| sim.step(&[_]game.Command{});
 
     structure = sim.state.get_structure(structure_id).?;
-    try testing.expect(!structure.under_construction);
+    try testing.expect(structure.build_state == .Active);
 
     unit = sim.state.get_unit(unit_id).?;
     try testing.expectEqual(.None, unit.get_intent());

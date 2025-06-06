@@ -5,6 +5,17 @@ const Position = shared.Position;
 
 pub const StructureType = enum {
     thing,
+
+    pub fn get_construction_cost_frames(t: StructureType) u32 {
+        return switch (t) {
+            .thing => 60,
+        };
+    }
+};
+
+pub const BuildState = union(enum) {
+    Constructing: u32,
+    Active,
 };
 
 pub const Structure = struct {
@@ -17,23 +28,23 @@ pub const Structure = struct {
     health: i32,
     max_health: i32,
 
-    under_construction: bool = true,
-    build_progress: f32 = 0.0,
+    build_state: BuildState,
 
-    is_active: bool = false,
     rally_pos: ?Position = null,
 
     const Self = @This();
 
     pub fn update(self: *Self, gamestate: *GameState) void {
         _ = gamestate;
-        if (self.under_construction) {
-            self.build_progress += 0.01; // or from builder rate
-            if (self.build_progress >= 1.0) {
-                self.under_construction = false;
-                self.is_active = true;
-                self.health = self.max_health;
-            }
+        switch (self.build_state) {
+            .Constructing => |remaining| {
+                if (remaining <= 1) {
+                    self.build_state = .Active;
+                } else {
+                    self.build_state = .{ .Constructing = remaining - 1 };
+                }
+            },
+            .Active => {},
         }
     }
 
@@ -45,6 +56,7 @@ pub const Structure = struct {
 
             .health = 0,
             .max_health = 100,
+            .build_state = .{ .Constructing = kind.get_construction_cost_frames() },
         };
     }
 };
