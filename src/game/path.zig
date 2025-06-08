@@ -15,6 +15,13 @@ pub const Path = struct {
         return find_path(allocator, grid, start, goal);
     }
 
+    pub fn clone(self: Self, allocator: std.mem.Allocator) void {
+        const pathT: type = @TypeOf(self.path);
+        const new = allocator.alloc(pathT, self.path.len) catch unreachable;
+        std.mem.copyForwards(pathT, new, self.path);
+        return new;
+    }
+
     pub fn deinit(self: Self, allocator: std.mem.Allocator) void {
         allocator.free(self.path);
     }
@@ -75,12 +82,8 @@ fn find_path(
     came_from.expandToCapacity();
 
     // Initialize arrays: set all costs to "infinity" and all parents to null.
-    for (cost_so_far.items) |*cell| {
-        cell.* = std.math.inf(f64);
-    }
-    for (came_from.items) |*cell| {
-        cell.* = null;
-    }
+    @memset(cost_so_far.items, std.math.inf(f64));
+    @memset(came_from.items, null);
 
     cost_so_far.items[idx(@intFromFloat(start.x), @intFromFloat(start.y), grid_width)] = 0;
 

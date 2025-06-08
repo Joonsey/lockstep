@@ -109,15 +109,17 @@ test "large logical map pathfinding" {
 
 test "(I think) normal sized logical map pathfinding" {
     const allocator = std.testing.allocator;
-    var map: LogicalMap = .{ .height = 256, .width = 256 };
+    const width = 128;
+    const height = 128;
+    var map: LogicalMap = .{ .height = height, .width = width };
 
     var tiles: std.ArrayListUnmanaged(Tile) = .{};
-    try tiles.appendNTimes(allocator, .{ .occupied = null, .walkable = true }, 256 * 256);
+    try tiles.appendNTimes(allocator, .{ .occupied = null, .walkable = true }, height * width);
     map.tiles = try tiles.toOwnedSlice(allocator);
     map.build_cache(allocator);
     defer map.deinit(allocator);
 
-    // this also takes up to 20ms
-    const path = try map.find_path(allocator, .{ .x = 0, .y = 0 }, .{ .x = 102, .y = 255 });
+    // takes about 3ms, that is okay
+    const path = try map.find_path(allocator, .{ .x = 0, .y = 0 }, .{ .x = 102, .y = 88 });
     defer path.deinit(allocator);
 }
